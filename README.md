@@ -63,11 +63,12 @@ O agente utiliza uma **System Message** com diretrizes estritas de consultoria B
 
 * **Planilha CRM em Produção:** [Acessar Planilha de Demonstração](https://docs.google.com/spreadsheets/d/1Dv88xEpsRgp3bL0anGUIsOzwOKn-D6cNad2oCuV1jhE/edit?usp=sharing)
 
-<img width="1920" height="1080" alt="Captura de tela de 2026-11-13 23-54-33" src="https://github.com/user-attachments/assets/ccda2ba0-2421-4c79-9964-f67756afda10" />
+<img width="1918" height="926" alt="Captura de tela de 2026-11-13 23-54-33" src="https://github.com/user-attachments/assets/0bd2c0dc-ea19-482b-8e7c-528b46943d11" />
 
-<img width="1920" height="1080" alt="Captura de tela de 2026-11-13 23-54-40" src="https://github.com/user-attachments/assets/1fa1c58e-1492-4ea9-9c19-611af60d1632" />
+<img width="1920" height="926" alt="Captura de tela de 2026-11-13 23-54-40" src="https://github.com/user-attachments/assets/9efabc7a-61e6-45b4-9387-6315d80e7a15" />
 
-<img width="1920" height="1080" alt="Captura de tela de 2026-11-13 23-59-24" src="https://github.com/user-attachments/assets/43efcd62-636d-493d-9ec7-61edf29c6355" />
+<img width="1912" height="902" alt="Captura de tela de 2026-11-14 00-30-19" src="https://github.com/user-attachments/assets/2806245d-fd60-4ba3-a975-dfc4908bd9fd" />
+
 
 
 ---
