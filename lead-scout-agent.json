@@ -1,0 +1,331 @@
+{
+  "name": "lead-scout-agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8f6ee74c-3d2d-452e-a19a-f8b1a17b3917",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"api_key\": \"tvly-4QBdZy-0tCnfZnnT90ECQc9GIjBukOgN0aeQaJ15Y1tmyui9j\",\n  \"query\": \"academias em Recife\",\n  \"max_results\": 5\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "fb2b70c4-f767-4afe-9803-f53fa870deef",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "20559e48-90d8-457e-82ba-d5844c670d69",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Empresa: {{ $json.title }}\nSite: {{ $json.url }}\nInformações: {{ $json.content }}"
+            },
+            {
+              "role": "system",
+              "content": "Você é um consultor especialista em vendas de serviços digitais (sites, chatbots de WhatsApp e automações de processos) para empresas brasileiras.\nSua tarefa é analisar os dados de uma empresa e identificar oportunidades de venda.\n\nResponda SEMPRE em formato JSON puro, sem crases de markdown e sem texto antes ou depois, com esta estrutura:\n{\n  \"score\": 8,\n  \"justificativa\": \"Uma ou duas frases explicando o motivo da nota\",\n  \"servico_recomendado\": \"Site Moderno, Chatbot de Atendimento ou Automação\",\n  \"abordagem\": \"Uma frase de contato comercial pronta para enviar ao dono\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "05dda459-8eb2-4bad-976f-12cf102fa913",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. Pega o texto da IA com segurança\nlet rawText = '';\nif ($json.output && $json.output[0] && $json.output[0].content) {\n  rawText = $json.output[0].content[0].text;\n} else if ($json.content && $json.content[0]) {\n  rawText = $json.content[0].text;\n} else {\n  rawText = JSON.stringify($json);\n}\n\n// 2. Remove possíveis marcações de markdown e converte para JSON\nconst cleanJson = rawText.replace(/```json/gi, '').replace(/```/gi, '').trim();\nlet dadosIa = {};\n\ntry {\n  dadosIa = JSON.parse(cleanJson);\n} catch (e) {\n  dadosIa = {\n    score: 5,\n    justificativa: \"Presença digital identificada\",\n    servico_recomendado: \"Site Moderno ou Chatbot\",\n    abordagem: \"Olá! Gostaria de conversar sobre soluções digitais para o seu negócio.\"\n  };\n}\n\n// 3. Junta com os dados da empresa que vieram da busca\nconst lead = $('Split Out').item.json;\n\nreturn {\n  nome: lead.title || \"Não informado\",\n  site: lead.url || \"Não informado\",\n  nicho: \"Academia\",\n  cidade: \"Recife\",\n  score: dadosIa.score || 0,\n  justificativa: dadosIa.justificativa || \"\",\n  servico: dadosIa.servico_recomendado || \"\",\n  abordagem: dadosIa.abordagem || \"\",\n  status: \"Novo\"\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "260b1391-57e5-4d63-b2f3-abdeb87e7773",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1Dv88xEpsRgp3bL0anGUIsOzwOKn-D6cNad2oCuV1jhE/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1160080374,
+          "mode": "list",
+          "cachedResultName": "lead-scout-crm",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Dv88xEpsRgp3bL0anGUIsOzwOKn-D6cNad2oCuV1jhE/edit#gid=1160080374"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nome da Empresa": "={{ $json.nome }}",
+            "Site": "={{ $json.site }}",
+            "Nicho": "={{ $json.nicho }}",
+            "Cidade": "={{ $json.cidade }}",
+            "Score (1-10)": "={{ $json.score }}",
+            "Justificativa da IA": "={{ $json.justificativa }}",
+            "Serviço Recomendado": "={{ $json.servico }}",
+            "Abordagem Sugerida": "={{ $json.abordagem }}",
+            "Status": "={{ $json.status }}",
+            "Data de Captura": "={{ $now.format('yyyy-MM-dd') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nome da Empresa",
+              "displayName": "Nome da Empresa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Site",
+              "displayName": "Site",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Telefone",
+              "displayName": "Telefone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nicho",
+              "displayName": "Nicho",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cidade",
+              "displayName": "Cidade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score (1-10)",
+              "displayName": "Score (1-10)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Justificativa da IA",
+              "displayName": "Justificativa da IA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Serviço Recomendado",
+              "displayName": "Serviço Recomendado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Abordagem Sugerida",
+              "displayName": "Abordagem Sugerida",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data de Captura",
+              "displayName": "Data de Captura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Observações",
+              "displayName": "Observações",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "358b04af-2830-431f-a730-b4dca19c76fc",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "aZTMNf6gvTOVpba5",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6b9cf025-94b0-4f93-aa12-14a794dda7f0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0caf2cd12532b5297137fff98b6155e8942a533a579046ea6269bc797e968b86"
+  },
+  "nodeGroups": [],
+  "id": "gGuPp540TDdhmubr",
+  "tags": []
+}
